@@ -71,7 +71,4 @@ public class ProductoRest {
         return productoService.reduceStock(id, quantity);
     }
 
-  
-    
-    
 }
