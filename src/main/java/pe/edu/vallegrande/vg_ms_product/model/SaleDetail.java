@@ -18,20 +18,21 @@ import java.math.BigDecimal;
 public class SaleDetail {
 
     @Id
-    private Long id;
+        private Long id;
 
-    @Column("sale_id")
-    private Long saleId; // FK a tabla 'sale'
+            @Column("sale_id")
+                private Long saleId; // FK a tabla 'sale'
 
-    @Column("product_id")
-    private Integer productId;
+                    @Column("product_id")
+                        private Integer productId;
 
-    @Column("weight")
-    private BigDecimal weight;
+                            @Column("weight")
+                                private BigDecimal weight;
 
-    @Column("packages")
-    private Integer packages;
+                                    @Column("packages")
+                                        private Integer packages;
 
-    @Column("total_weight")
-    private BigDecimal totalWeight;
-}
+                                            @Column("total_weight")
+                                                private BigDecimal totalWeight;
+                                                }
+                                                

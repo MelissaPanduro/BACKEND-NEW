@@ -56,6 +56,17 @@ public class SaleService {
         return saleRepository.findByRuc(document);
     }
 
+    // ✅ Nuevo método para listar todas las ventas con sus detalles
+    public Flux<SaleResponse> getAllSalesWithDetails() {
+        return saleRepository.findAll()
+            .flatMap(sale ->
+                saleDetailService.getDetailsBySaleId(sale.getId())
+                    .collectList()
+                    .map(details -> new SaleResponse(sale, details))
+            );
+    }
+
+
     // ✅ Nuevo método: obtener venta junto con sus detalles
     public Mono<SaleResponse> getSaleWithDetails(Long id) {
         return saleRepository.findById(id)

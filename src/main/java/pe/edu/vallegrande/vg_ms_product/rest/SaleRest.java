@@ -56,6 +56,13 @@ public class SaleRest {
         return saleService.getSaleByDocument(document);
     }
 
+    // ✅ Nuevo: listar todas las ventas con detalles
+    @GetMapping("/with-details")
+    public Flux<SaleResponse> getAllSalesWithDetails() {
+        return saleService.getAllSalesWithDetails();
+    }
+
+
     // ✅ NUEVO: Obtener venta con detalles
     @GetMapping("/with-details/{id}")
     public Mono<SaleResponse> getSaleWithDetails(@PathVariable Long id) {
