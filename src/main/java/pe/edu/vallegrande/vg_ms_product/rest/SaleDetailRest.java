@@ -16,7 +16,7 @@ public class SaleDetailRest {
 
     private final SaleDetailService saleDetailService;
 
-    // Obtener todos los detalles (para evitar error 405)
+    // Obtener todos los detalles 
     @GetMapping
     public Flux<SaleDetail> getAllSaleDetails() {
         return saleDetailService.getAllSaleDetails();
