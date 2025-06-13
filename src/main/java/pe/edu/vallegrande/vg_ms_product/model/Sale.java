@@ -1,6 +1,9 @@
 package pe.edu.vallegrande.vg_ms_product.model;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -13,10 +16,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Table("sale")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Sale {
 
     @Id
@@ -35,7 +34,7 @@ public class Sale {
     private String address;
 
     @Column("price_per_kg")
-    private BigDecimal pricePerKg; // (si el precio es fijo para toda la venta, si no, se puede quitar)
+    private BigDecimal pricePerKg;
 
     @Column("total_price")
     private BigDecimal totalPrice;

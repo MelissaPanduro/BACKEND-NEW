@@ -16,17 +16,26 @@ public class SaleDetailRest {
 
     private final SaleDetailService saleDetailService;
 
+    // Obtener todos los detalles (para evitar error 405)
+    @GetMapping
+    public Flux<SaleDetail> getAllSaleDetails() {
+        return saleDetailService.getAllSaleDetails();
+    }
+
+    // Crear un nuevo detalle de venta
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<SaleDetail> createSaleDetail(@RequestBody SaleDetail saleDetail) {
         return saleDetailService.saveSaleDetail(saleDetail);
     }
 
+    // Obtener detalles por ID de venta
     @GetMapping("/sale/{saleId}")
     public Flux<SaleDetail> getDetailsBySaleId(@PathVariable Long saleId) {
         return saleDetailService.getDetailsBySaleId(saleId);
     }
 
+    // Eliminar un detalle por su ID
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteSaleDetail(@PathVariable Long id) {
