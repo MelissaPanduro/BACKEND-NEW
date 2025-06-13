@@ -17,7 +17,8 @@ public class SaleService {
     private final SaleDetailService saleDetailService;
 
     public Mono<Sale> createSale(Sale sale) {
-        return saleRepository.save(sale);
+    sale.setId(null);
+    return saleRepository.save(sale);
     }
 
     public Mono<Sale> createSaleWithDetails(SaleRequest saleRequest) {
