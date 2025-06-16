@@ -31,10 +31,8 @@ public class Sale {
     private String ruc;
 
     @Column("address")
-    private String address;
-
-    @Column("price_per_kg")
-    private BigDecimal pricePerKg;
+    private String address;3
+    
 
     @Column("total_price")
     private BigDecimal totalPrice;

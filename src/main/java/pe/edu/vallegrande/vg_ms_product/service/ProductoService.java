@@ -1,141 +1,109 @@
 package pe.edu.vallegrande.vg_ms_product.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import pe.edu.vallegrande.vg_ms_product.dto.SaleRequest;
+import pe.edu.vallegrande.vg_ms_product.dto.SaleResponse;
+import pe.edu.vallegrande.vg_ms_product.model.Sale;
+import pe.edu.vallegrande.vg_ms_product.model.SaleDetail;
 import pe.edu.vallegrande.vg_ms_product.model.ProductoModel;
-import pe.edu.vallegrande.vg_ms_product.repository.ProductoRepository;
-import reactor.core.publisher.Mono;
+import pe.edu.vallegrande.vg_ms_product.repository.SaleRepository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
-public class ProductoService {
+@RequiredArgsConstructor
+public class SaleService {
 
-    private final ProductoRepository productoRepository;
+    private final SaleRepository saleRepository;
+    private final SaleDetailService saleDetailService;
+    private final ProductoService productoService; // ✅ Inyectado correctamente
 
-    @Autowired
-    public ProductoService(ProductoRepository productoRepository) {
-        this.productoRepository = productoRepository;
+    public Mono<Sale> createSale(Sale sale) {
+        sale.setId(null);
+        return saleRepository.save(sale);
     }
 
-    public Mono<ProductoModel> createProduct(ProductoModel product) {
-        if (product.getExpiryDate() != null && product.getEntryDate() != null &&
-            product.getExpiryDate().isBefore(product.getEntryDate())) {
-            return Mono.error(new IllegalArgumentException("La fecha de caducidad no puede ser anterior a la fecha de entrada"));
-        }
-        return productoRepository.save(product);
+    public Mono<Sale> createSaleWithDetails(SaleRequest saleRequest) {
+        Sale sale = saleRequest.getSale();
+        sale.setId(null);
+
+        return saleRepository.save(sale)
+            .flatMap(savedSale ->
+                Flux.fromIterable(saleRequest.getDetails())
+                    .flatMap(detail ->
+                        productoService.getProductById(detail.getProductId())
+                            .switchIfEmpty(Mono.error(new IllegalArgumentException("Producto no encontrado con ID: " + detail.getProductId())))
+                            .flatMap(product -> {
+                                int cantidad = detail.getQuantity();
+                                if (product.getStock() < cantidad) {
+                                    return Mono.error(new IllegalArgumentException("Stock insuficiente para el producto ID: " + product.getId()));
+                                }
+
+                                return productoService.reduceStock(product.getId(), cantidad)
+                                    .map(updatedProduct -> {
+                                        double subtotal = updatedProduct.getPackageWeight().doubleValue()
+                                                * cantidad
+                                                * updatedProduct.getPricePerKilo().doubleValue();
+
+                                        detail.setSaleId(savedSale.getId());
+                                        detail.setSubtotal(subtotal);
+                                        return detail;
+                                    });
+                            })
+                    )
+                    .flatMap(saleDetailService::saveSaleDetail)
+                    .collectList()
+                    .flatMap(savedDetails -> {
+                        double total = savedDetails.stream()
+                            .mapToDouble(SaleDetail::getSubtotal)
+                            .sum();
+
+                        savedSale.setTotalPrice(total);
+                        return saleRepository.save(savedSale);
+                    })
+            );
     }
 
-    public Flux<ProductoModel> getAllProducts() {
-        return productoRepository.findAll();
-    }
-
-    public Mono<Void> deleteProduct(Long id) {
-        return productoRepository.deleteById(id);
-    }
-
-    public Mono<ProductoModel> softDeleteProduct(Long id) {
-        return productoRepository.findById(id)
-            .flatMap(product -> {
-                product.setStatus("I");
-                return productoRepository.save(product);
+    public Mono<Sale> updateSale(Long id, Sale sale) {
+        return saleRepository.findById(id)
+            .flatMap(existingSale -> {
+                sale.setId(id);
+                return saleRepository.save(sale);
             });
     }
 
-    public Mono<ProductoModel> restoreProduct(Long id) {
-        return productoRepository.findByIdAndStatus(id, "I")
-            .flatMap(product -> {
-                product.setStatus("A");
-                return productoRepository.save(product);
-            });
+    public Mono<Void> deleteSale(Long id) {
+        return saleRepository.deleteById(id);
     }
 
-    public Mono<ProductoModel> updateProduct(Long id, ProductoModel productDetails) {
-        return productoRepository.findById(id)
-            .flatMap(existingProduct -> {
-                if (productDetails.getExpiryDate() != null && productDetails.getEntryDate() != null &&
-                    productDetails.getExpiryDate().isBefore(productDetails.getEntryDate())) {
-                    return Mono.error(new IllegalArgumentException("La fecha de caducidad no puede ser anterior a la fecha de entrada"));
-                }
-
-                existingProduct.setType(productDetails.getType());
-                existingProduct.setDescription(productDetails.getDescription());
-                existingProduct.setPackageWeight(productDetails.getPackageWeight());
-                existingProduct.setStock(productDetails.getStock());
-                existingProduct.setEntryDate(productDetails.getEntryDate());
-                existingProduct.setExpiryDate(productDetails.getExpiryDate());
-                existingProduct.setTypeProduct(productDetails.getTypeProduct());
-                existingProduct.setStatus(productDetails.getStatus());
-
-                return productoRepository.save(existingProduct);
-            });
+    public Flux<Sale> getAllSales() {
+        return saleRepository.findAll();
     }
 
-    // Aumentar stock y cambiar estado si era inactivo
-    public Mono<ProductoModel> increaseStock(Long id, int quantityAdded) {
-        return productoRepository.findById(id)
-            .flatMap(product -> {
-                if (quantityAdded <= 0) {
-                    return Mono.error(new IllegalArgumentException("La cantidad debe ser mayor que cero."));
-                }
-
-                int nuevoStock = product.getStock() + quantityAdded;
-                product.setStock(nuevoStock);
-
-                // Si el producto estaba inactivo por falta de stock, reactivarlo
-                if ("I".equals(product.getStatus()) && nuevoStock > 0) {
-                    product.setStatus("A"); // Activo si ya hay stock
-                }
-
-                return productoRepository.save(product);
-            });
+    public Mono<Sale> getSaleById(Long id) {
+        return saleRepository.findById(id);
     }
 
-    // Ajustar stock (positivo = aumentar, negativo = disminuir)
-    public Mono<ProductoModel> adjustStock(Long id, int quantityChange) {
-        return productoRepository.findById(id)
-            .flatMap(product -> {
-                if (quantityChange == 0) {
-                    return Mono.just(product); // No hay cambios
-                }
-
-                int nuevoStock = product.getStock() + quantityChange;
-
-                if (nuevoStock < 0) {
-                    return Mono.error(new IllegalArgumentException("Stock insuficiente para realizar la operación."));
-                }
-
-                product.setStock(nuevoStock);
-
-                // Actualizar estado según el stock
-                if (nuevoStock == 0 && "A".equals(product.getStatus())) {
-                    product.setStatus("I"); // Inactivo si ya no hay stock
-                } else if (nuevoStock > 0 && "I".equals(product.getStatus())) {
-                    product.setStatus("A"); // Activo si ya hay stock
-                }
-
-                return productoRepository.save(product);
-            });
+    public Mono<Sale> getSaleByDocument(String document) {
+        return saleRepository.findByRuc(document);
     }
 
-    // Disminuir stock específico (reduceStock)
-    public Mono<ProductoModel> reduceStock(Long id, int quantity) {
-        if (quantity <= 0) {
-            return Mono.error(new IllegalArgumentException("La cantidad a reducir debe ser mayor que cero."));
-        }
-        return productoRepository.findById(id)
-            .flatMap(product -> {
-                int nuevoStock = product.getStock() - quantity;
-                if (nuevoStock < 0) {
-                    return Mono.error(new IllegalArgumentException("Stock insuficiente para reducir la cantidad solicitada."));
-                }
-                product.setStock(nuevoStock);
+    public Flux<SaleResponse> getAllSalesWithDetails() {
+        return saleRepository.findAll()
+            .flatMap(sale ->
+                saleDetailService.getDetailsBySaleId(sale.getId())
+                    .collectList()
+                    .map(details -> new SaleResponse(sale, details))
+            );
+    }
 
-                // Actualizar estado si stock queda en 0
-                if (nuevoStock == 0 && "A".equals(product.getStatus())) {
-                    product.setStatus("I"); // Inactivo si ya no hay stock
-                }
-
-                return productoRepository.save(product);
-            });
+    public Mono<SaleResponse> getSaleWithDetails(Long id) {
+        return saleRepository.findById(id)
+            .flatMap(sale ->
+                saleDetailService.getDetailsBySaleId(sale.getId())
+                    .collectList()
+                    .map(details -> new SaleResponse(sale, details))
+            );
     }
 }

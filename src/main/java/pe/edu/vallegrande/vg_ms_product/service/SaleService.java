@@ -22,16 +22,45 @@ public class SaleService {
     }
 
     public Mono<Sale> createSaleWithDetails(SaleRequest saleRequest) {
-        return saleRepository.save(saleRequest.getSale())
-            .flatMap(savedSale -> Flux.fromIterable(saleRequest.getDetails())
-                .map(detail -> {
-                    detail.setSaleId(savedSale.getId());
-                    return detail;
+    Sale sale = saleRequest.getSale();
+    sale.setId(null); // Asegurar que sea nuevo
+
+    return saleRepository.save(sale)
+        .flatMap(savedSale -> {
+            return Flux.fromIterable(saleRequest.getDetails())
+                .flatMap(detail -> {
+                    // Obtener el producto y validar stock
+                    return productoService.getAllProducts()
+                        .filter(p -> p.getId().equals(detail.getProductId()))
+                        .single()
+                        .flatMap(product -> {
+                            int cantidad = detail.getQuantity();
+
+                            if (product.getStock() < cantidad) {
+                                return Mono.error(new IllegalArgumentException("Stock insuficiente para el producto ID " + product.getId()));
+                            }
+
+                            // Reducir el stock
+                            return productoService.reduceStock(product.getId(), cantidad)
+                                .map(updatedProduct -> {
+                                    // Calcular subtotal y preparar el detalle
+                                    double subtotal = updatedProduct.getPackageWeight().doubleValue() * cantidad * updatedProduct.getPricePerKilo().doubleValue();
+                                    detail.setSaleId(savedSale.getId());
+                                    detail.setSubtotal(subtotal);
+                                    return detail;
+                                });
+                        });
                 })
                 .flatMap(saleDetailService::saveSaleDetail)
-                .then(Mono.just(savedSale))
-            );
-    }
+                .collectList()
+                .flatMap(savedDetails -> {
+                    // Calcular el total
+                    double total = savedDetails.stream().mapToDouble(SaleDetail::getSubtotal).sum();
+                    savedSale.setTotalPrice(total);
+                    return saleRepository.save(savedSale);
+                });
+        });
+}
 
     public Mono<Sale> updateSale(Long id, Sale sale) {
         return saleRepository.findById(id)
