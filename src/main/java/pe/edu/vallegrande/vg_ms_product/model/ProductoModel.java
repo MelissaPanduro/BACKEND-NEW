@@ -39,9 +39,8 @@ public class ProductoModel {
     @Column("type_product")
     private String typeProduct;
 
-    @Column(name = "price_per_kilo")
+    @Column("price_per_kilo")
     private BigDecimal pricePerKilo;
-
 
     @Builder.Default
     private String status = "A";

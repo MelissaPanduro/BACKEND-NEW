@@ -31,7 +31,7 @@ public class Sale {
     private String ruc;
 
     @Column("address")
-    private String address;3
+    private String address;
     
 
     @Column("total_price")

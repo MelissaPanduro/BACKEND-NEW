@@ -1,4 +1,4 @@
-package pe.edu.vallegrande.vg_ms_product.rest;
+package pe.edu.vallegrande.vg_ms_product.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
