@@ -1,4 +1,4 @@
-package pe.edu.vallegrande.vg_ms_product.rest;
+package pe.edu.vallegrande.vg_ms_product.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
