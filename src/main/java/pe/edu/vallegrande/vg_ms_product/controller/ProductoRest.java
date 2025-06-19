@@ -33,6 +33,11 @@ public class ProductoRest {
         return productoService.deleteProduct(id);
     }
 
+    @GetMapping("/active")
+    public Flux<ProductoModel> getActiveProducts() {
+        return productoService.getActiveProducts(); // Deberías implementarlo en el service
+    }
+
     @PutMapping("/logic/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Mono<ProductoModel> softDeleteProduct(@PathVariable Long id) {

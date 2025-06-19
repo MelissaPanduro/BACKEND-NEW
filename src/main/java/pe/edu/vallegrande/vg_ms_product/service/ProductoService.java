@@ -122,6 +122,12 @@ public class ProductoService {
             });
     }
 
+
+    public Flux<ProductoModel> getActiveProducts() {
+    return productoRepository.findAll()
+            .filter(producto -> "A".equals(producto.getStatus()));
+    }
+
     // Disminuir stock específico (reduceStock)
     public Mono<ProductoModel> reduceStock(Long id, int quantity) {
         if (quantity <= 0) {
