@@ -26,9 +26,10 @@ public class SaleRest {
 
     @PostMapping("/full")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Sale> createSaleWithDetails(@RequestBody SaleRequest saleRequest) {
+    public Mono<SaleResponse> createSaleWithDetails(@RequestBody SaleRequest saleRequest) {
         return saleService.createSaleWithDetails(saleRequest);
     }
+
 
     @PutMapping("/{id}")
     public Mono<Sale> updateSale(@PathVariable Long id, @RequestBody Sale sale) {
@@ -64,7 +65,7 @@ public class SaleRest {
 
 
     // ✅ NUEVO: Obtener venta con detalles
-    @GetMapping("/with-details/{id}")
+    @GetMapping("/{id}/with-details")
     public Mono<SaleResponse> getSaleWithDetails(@PathVariable Long id) {
         return saleService.getSaleWithDetails(id);
     }

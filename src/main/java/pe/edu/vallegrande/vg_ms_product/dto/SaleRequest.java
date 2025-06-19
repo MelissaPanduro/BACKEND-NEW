@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import pe.edu.vallegrande.vg_ms_product.model.Sale;
-import pe.edu.vallegrande.vg_ms_product.model.SaleDetail;
+import pe.edu.vallegrande.vg_ms_product.model.SaleDetail; // ✅ Importa el modelo correcto
 
 import java.util.List;
 
@@ -13,5 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class SaleRequest {
     private Sale sale;
-    private List<SaleDetail> details;
+    private List<SaleDetail> details; // ✅ Tipo correcto
 }

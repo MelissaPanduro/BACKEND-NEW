@@ -26,47 +26,48 @@ public class SaleService {
         return saleRepository.save(sale);
     }
 
-    public Mono<Sale> createSaleWithDetails(SaleRequest saleRequest) {
-        Sale sale = saleRequest.getSale();
-        sale.setId(null); // Nuevo registro
+public Mono<SaleResponse> createSaleWithDetails(SaleRequest saleRequest) {
+    Sale sale = saleRequest.getSale();
+    sale.setId(null); // Nuevo registro
 
-        return saleRepository.save(sale)
-            .flatMap(savedSale ->
-                Flux.fromIterable(saleRequest.getDetails())
-                    .flatMap(detail -> {
-                        Long productIdLong = detail.getProductId().longValue(); // Convertir Integer a Long
-                        return productoService.getProductById(productIdLong)
-                            .switchIfEmpty(Mono.error(new IllegalArgumentException("Producto no encontrado con ID: " + productIdLong)))
-                            .flatMap(product -> {
-                                int cantidad = detail.getPackages();
-                                if (product.getStock() < cantidad) {
-                                    return Mono.error(new IllegalArgumentException("Stock insuficiente para el producto ID: " + product.getId()));
-                                }
-                                // Reducir stock
-                                return productoService.reduceStock(product.getId(), cantidad)
-                                    .map(updatedProduct -> {
-                                        BigDecimal subtotal = updatedProduct.getPackageWeight()
-                                            .multiply(BigDecimal.valueOf(cantidad))
-                                            .multiply(updatedProduct.getPricePerKilo());
+    return saleRepository.save(sale)
+        .flatMap(savedSale ->
+            Flux.fromIterable(saleRequest.getDetails())
+                .flatMap(detail -> {
+                    Long productIdLong = detail.getProductId().longValue();
+                    return productoService.getProductById(productIdLong)
+                        .switchIfEmpty(Mono.error(new IllegalArgumentException("Producto no encontrado con ID: " + productIdLong)))
+                        .flatMap(product -> {
+                            int cantidad = detail.getPackages();
+                            if (product.getStock() < cantidad) {
+                                return Mono.error(new IllegalArgumentException("Stock insuficiente para el producto ID: " + product.getId()));
+                            }
+                            return productoService.reduceStock(product.getId(), cantidad)
+                                .map(updatedProduct -> {
+                                    BigDecimal subtotal = updatedProduct.getPackageWeight()
+                                        .multiply(BigDecimal.valueOf(cantidad))
+                                        .multiply(updatedProduct.getPricePerKilo());
 
-                                        detail.setSaleId(savedSale.getId());
-                                        detail.setSubtotal(subtotal);
-                                        return detail;
-                                    });
-                            });
-                    })
-                    .flatMap(detail -> saleDetailService.saveSaleDetail(detail)) // Lambda explícita para evitar error de inferencia
-                    .collectList()
-                    .flatMap(savedDetails -> {
-                        BigDecimal total = savedDetails.stream()
-                            .map(SaleDetail::getSubtotal)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                    detail.setSaleId(savedSale.getId());
+                                    detail.setSubtotal(subtotal);
+                                    return detail;
+                                });
+                        });
+                })
+                .flatMap(saleDetailService::saveSaleDetail)
+                .collectList()
+                .flatMap(savedDetails -> {
+                    BigDecimal total = savedDetails.stream()
+                        .map(SaleDetail::getSubtotal)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                        savedSale.setTotalPrice(total); // Asumiendo que totalPrice es BigDecimal, sino adapta aquí
-                        return saleRepository.save(savedSale);
-                    })
-            );
-    }
+                    savedSale.setTotalPrice(total);
+                    return saleRepository.save(savedSale)
+                        .map(updatedSale -> new SaleResponse(updatedSale, savedDetails));
+                })
+        );
+}
+
 
     public Mono<Sale> updateSale(Long id, Sale sale) {
         return saleRepository.findById(id)
