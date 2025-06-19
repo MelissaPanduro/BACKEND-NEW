@@ -8,6 +8,8 @@ import pe.edu.vallegrande.vg_ms_product.service.ProductoService;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/NPH/products")
 @CrossOrigin(origins = "*")
@@ -35,7 +37,7 @@ public class ProductoRest {
 
     @GetMapping("/active")
     public Flux<ProductoModel> getActiveProducts() {
-        return productoService.getActiveProducts(); // Deberías implementarlo en el service
+        return productoService.getActiveProducts();
     }
 
     @PutMapping("/logic/{id}")
@@ -56,14 +58,27 @@ public class ProductoRest {
         return productoService.updateProduct(id, productDetails);
     }
 
-    // Aumentar stock y actualizar estado si era inactivo
+    // PATCH para actualizar stock y estado (desde el frontend)
+    @PatchMapping("/{id}/stock")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<ProductoModel> updateStockAndStatus(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        int newStock = ((Number) body.get("stock")).intValue();
+        String newStatus = (String) body.get("status");
+
+        return productoService.getProductById(id)
+                .flatMap(product -> {
+                    product.setStock(newStock);
+                    product.setStatus(newStatus);
+                    return productoService.updateProduct(id, product);
+                });
+    }
+
     @PutMapping("/increase-stock/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Mono<ProductoModel> increaseStock(@PathVariable Long id, @RequestParam int quantity) {
         return productoService.increaseStock(id, quantity);
     }
 
-    // Ajustar stock (puede aumentar o disminuir)
     @PutMapping("/adjust-stock/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Mono<ProductoModel> adjustStock(@PathVariable Long id, @RequestParam int quantityChange) {
@@ -75,5 +90,4 @@ public class ProductoRest {
     public Mono<ProductoModel> reduceStock(@PathVariable Long id, @RequestParam int quantity) {
         return productoService.reduceStock(id, quantity);
     }
-
 }

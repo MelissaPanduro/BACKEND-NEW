@@ -42,9 +42,13 @@ public class ProductoService {
     }
 
     public Mono<ProductoModel> getProductById(Long id) {
-    return productoRepository.findById(id);
-}
+        return productoRepository.findById(id);
+    }
 
+    // 🔧 Nuevo método requerido por el controlador
+    public Mono<ProductoModel> getById(Long id) {
+        return productoRepository.findById(id);
+    }
 
     public Mono<ProductoModel> restoreProduct(Long id) {
         return productoRepository.findByIdAndStatus(id, "I")
@@ -75,7 +79,6 @@ public class ProductoService {
             });
     }
 
-    // Aumentar stock y cambiar estado si era inactivo
     public Mono<ProductoModel> increaseStock(Long id, int quantityAdded) {
         return productoRepository.findById(id)
             .flatMap(product -> {
@@ -86,21 +89,19 @@ public class ProductoService {
                 int nuevoStock = product.getStock() + quantityAdded;
                 product.setStock(nuevoStock);
 
-                // Si el producto estaba inactivo por falta de stock, reactivarlo
                 if ("I".equals(product.getStatus()) && nuevoStock > 0) {
-                    product.setStatus("A"); // Activo si ya hay stock
+                    product.setStatus("A");
                 }
 
                 return productoRepository.save(product);
             });
     }
 
-    // Ajustar stock (positivo = aumentar, negativo = disminuir)
     public Mono<ProductoModel> adjustStock(Long id, int quantityChange) {
         return productoRepository.findById(id)
             .flatMap(product -> {
                 if (quantityChange == 0) {
-                    return Mono.just(product); // No hay cambios
+                    return Mono.just(product);
                 }
 
                 int nuevoStock = product.getStock() + quantityChange;
@@ -111,24 +112,21 @@ public class ProductoService {
 
                 product.setStock(nuevoStock);
 
-                // Actualizar estado según el stock
                 if (nuevoStock == 0 && "A".equals(product.getStatus())) {
-                    product.setStatus("I"); // Inactivo si ya no hay stock
+                    product.setStatus("I");
                 } else if (nuevoStock > 0 && "I".equals(product.getStatus())) {
-                    product.setStatus("A"); // Activo si ya hay stock
+                    product.setStatus("A");
                 }
 
                 return productoRepository.save(product);
             });
     }
 
-
     public Flux<ProductoModel> getActiveProducts() {
-    return productoRepository.findAll()
-            .filter(producto -> "A".equals(producto.getStatus()));
+        return productoRepository.findAll()
+                .filter(producto -> "A".equals(producto.getStatus()));
     }
 
-    // Disminuir stock específico (reduceStock)
     public Mono<ProductoModel> reduceStock(Long id, int quantity) {
         if (quantity <= 0) {
             return Mono.error(new IllegalArgumentException("La cantidad a reducir debe ser mayor que cero."));
@@ -141,9 +139,8 @@ public class ProductoService {
                 }
                 product.setStock(nuevoStock);
 
-                // Actualizar estado si stock queda en 0
                 if (nuevoStock == 0 && "A".equals(product.getStatus())) {
-                    product.setStatus("I"); // Inactivo si ya no hay stock
+                    product.setStatus("I");
                 }
 
                 return productoRepository.save(product);

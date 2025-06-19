@@ -8,7 +8,6 @@ spring:
   r2dbc:
     url: r2dbc:pool:postgresql://aws-0-us-east-2.pooler.supabase.com:5432/postgres
     username: postgres.aouvfnldkfybtfbfhrap
-    password: uYrSUGDqZSGn8mPb
-
+    password: v6g7A0oiFvXzWHLh
 
         
