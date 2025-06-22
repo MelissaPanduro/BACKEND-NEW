@@ -33,9 +33,6 @@ public class ProductoModel {
     @Column("entry_date")
     private LocalDate entryDate;
 
-    @Column("expiry_date")
-    private LocalDate expiryDate;
-
     @Column("type_product")
     private String typeProduct;
 

@@ -17,26 +17,25 @@ import java.math.BigDecimal;
 @Table("sale_detail")
 public class SaleDetail {
 
-@Id
-private Long id;
+    @Id
+    private Long id;
 
-@Column("sale_id")
-private Long saleId; // FK a tabla 'sale'
+    @Column("sale_id")
+    private Long saleId;
 
-@Column("product_id")
-private Integer productId;
+    @Column("product_id")
+    private Long productId;
 
-@Column("weight")
-private BigDecimal weight;
+    private BigDecimal weight;
 
-@Column("packages")
-private Integer packages;
+    private Integer packages;
 
-@Column("total_weight")
-private BigDecimal totalWeight;
+    @Column("total_weight")
+    private BigDecimal totalWeight;
 
-@Column("subtotal")
-private BigDecimal subtotal;
+    @Column("price_per_kg")
+    private BigDecimal pricePerKg;
 
+    @Column("total_price")
+    private BigDecimal totalPrice;
 }
-                                                
