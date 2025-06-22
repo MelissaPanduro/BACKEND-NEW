@@ -18,10 +18,6 @@ public class ProductoService {
     }
 
     public Mono<ProductoModel> createProduct(ProductoModel product) {
-        if (product.getExpiryDate() != null && product.getEntryDate() != null &&
-            product.getExpiryDate().isBefore(product.getEntryDate())) {
-            return Mono.error(new IllegalArgumentException("La fecha de caducidad no puede ser anterior a la fecha de entrada"));
-        }
         return productoRepository.save(product);
     }
 
@@ -45,7 +41,6 @@ public class ProductoService {
         return productoRepository.findById(id);
     }
 
-    // 🔧 Nuevo método requerido por el controlador
     public Mono<ProductoModel> getById(Long id) {
         return productoRepository.findById(id);
     }
@@ -61,20 +56,13 @@ public class ProductoService {
     public Mono<ProductoModel> updateProduct(Long id, ProductoModel productDetails) {
         return productoRepository.findById(id)
             .flatMap(existingProduct -> {
-                if (productDetails.getExpiryDate() != null && productDetails.getEntryDate() != null &&
-                    productDetails.getExpiryDate().isBefore(productDetails.getEntryDate())) {
-                    return Mono.error(new IllegalArgumentException("La fecha de caducidad no puede ser anterior a la fecha de entrada"));
-                }
-
                 existingProduct.setType(productDetails.getType());
                 existingProduct.setDescription(productDetails.getDescription());
                 existingProduct.setPackageWeight(productDetails.getPackageWeight());
                 existingProduct.setStock(productDetails.getStock());
                 existingProduct.setEntryDate(productDetails.getEntryDate());
-                existingProduct.setExpiryDate(productDetails.getExpiryDate());
                 existingProduct.setTypeProduct(productDetails.getTypeProduct());
                 existingProduct.setStatus(productDetails.getStatus());
-
                 return productoRepository.save(existingProduct);
             });
     }

@@ -6,7 +6,6 @@ import pe.edu.vallegrande.vg_ms_product.dto.SaleDetailDto;
 import pe.edu.vallegrande.vg_ms_product.dto.SaleDto;
 import pe.edu.vallegrande.vg_ms_product.model.Sale;
 import pe.edu.vallegrande.vg_ms_product.model.SaleDetail;
-import pe.edu.vallegrande.vg_ms_product.model.ProductoModel;
 import pe.edu.vallegrande.vg_ms_product.repository.SaleRepository;
 import pe.edu.vallegrande.vg_ms_product.repository.SaleDetailRepository;
 import reactor.core.publisher.Flux;
@@ -43,8 +42,7 @@ public class SaleService {
                                 .flatMap(product -> {
                                     BigDecimal weight = product.getPackageWeight();
                                     BigDecimal totalWeight = weight.multiply(BigDecimal.valueOf(packages));
-                                    BigDecimal pricePerKg = product.getPricePerKilo();
-                                    BigDecimal totalPrice = totalWeight.multiply(pricePerKg);
+                                    BigDecimal totalPrice = totalWeight.multiply(BigDecimal.valueOf(0)); // usar 0 como placeholder
 
                                     SaleDetail detail = SaleDetail.builder()
                                             .saleId(savedSale.getId())
@@ -52,7 +50,7 @@ public class SaleService {
                                             .weight(weight)
                                             .packages(packages)
                                             .totalWeight(totalWeight)
-                                            .pricePerKg(pricePerKg)
+                                            .pricePerKg(BigDecimal.ZERO)
                                             .totalPrice(totalPrice)
                                             .build();
 
@@ -101,6 +99,6 @@ public class SaleService {
 
     public Flux<SaleDto> findAll() {
         return saleRepository.findAll()
-                .flatMap(this::getById); // reutiliza getById para traer con detalles
+                .flatMap(sale -> getById(sale.getId())); // ahora es correcto
     }
 }

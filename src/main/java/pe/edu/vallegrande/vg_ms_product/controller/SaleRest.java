@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.vallegrande.vg_ms_product.dto.SaleDto;
-import pe.edu.vallegrande.vg_ms_product.model.Sale;
 import pe.edu.vallegrande.vg_ms_product.service.SaleService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,67 +17,38 @@ public class SaleRest {
 
     private final SaleService saleService;
 
-    // Crear una venta básica
+    // Crear una venta con detalles (usa SaleDto)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Sale> createSale(@RequestBody Sale sale) {
-        return saleService.createSale(sale);
-    }
-
-    // Crear una venta con detalles
-    @PostMapping("/full")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Mono<SaleDto> createSaleWithDetails(@RequestBody SaleDto saleDto) {
-        return saleService.createSaleWithDetails(saleDto);
-    }
-
-    // Actualizar venta básica
-    @PutMapping("/{id}")
-    public Mono<ResponseEntity<Sale>> updateSale(@PathVariable Long id, @RequestBody Sale sale) {
-        return saleService.updateSale(id, sale)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
-
-    // Eliminar una venta
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> deleteSale(@PathVariable Long id) {
-        return saleService.deleteSale(id);
-    }
-
-    // Obtener todas las ventas (sin detalles)
-    @GetMapping
-    public Flux<Sale> getAllSales() {
-        return saleService.getAllSales();
-    }
-
-    // Obtener venta por ID
-    @GetMapping("/{id}")
-    public Mono<ResponseEntity<Sale>> getSaleById(@PathVariable Long id) {
-        return saleService.getSaleById(id)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
-
-    // Buscar por documento
-    @GetMapping("/search-by-document/{document}")
-    public Mono<ResponseEntity<Sale>> getSaleByDocument(@PathVariable String document) {
-        return saleService.getSaleByDocument(document)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+    public Mono<SaleDto> createSale(@RequestBody SaleDto saleDto) {
+        return saleService.save(saleDto);
     }
 
     // Obtener todas las ventas con detalles
-    @GetMapping("/with-details")
-    public Flux<SaleDto> getAllSalesWithDetails() {
-        return saleService.getAllSalesWithDetails();
+    @GetMapping
+    public Flux<SaleDto> getAllSales() {
+        return saleService.findAll();
     }
 
     // Obtener una venta con detalles por ID
-    @GetMapping("/{id}/with-details")
-    public Mono<ResponseEntity<SaleDto>> getSaleWithDetails(@PathVariable Long id) {
-        return saleService.getSaleWithDetails(id)
+    @GetMapping("/{id}")
+    public Mono<ResponseEntity<SaleDto>> getSaleById(@PathVariable Long id) {
+        return saleService.getById(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    // Eliminar una venta por ID
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteSale(@PathVariable Long id) {
+        return saleService.delete(id);
+    }
+
+    // Actualizar una venta con detalles
+    @PutMapping("/{id}")
+    public Mono<ResponseEntity<SaleDto>> updateSale(@PathVariable Long id, @RequestBody SaleDto saleDto) {
+        return saleService.updateSale(id, saleDto)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }

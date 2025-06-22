@@ -45,16 +45,14 @@ public class ProductoRest {
     public Mono<ResponseEntity<ProductoModel>> updateProduct(@PathVariable Long id, @RequestBody ProductoModel productDetails) {
         return productoService.getProductById(id)
                 .flatMap(existingProduct -> {
-                    existingProduct.setCode(productDetails.getCode());
                     existingProduct.setDescription(productDetails.getDescription());
                     existingProduct.setStock(productDetails.getStock());
-                    existingProduct.setCost(productDetails.getCost());
-                    existingProduct.setDateRegister(productDetails.getDateRegister());
                     existingProduct.setStatus(productDetails.getStatus());
                     existingProduct.setType(productDetails.getType());
                     existingProduct.setTypeProduct(productDetails.getTypeProduct());
                     existingProduct.setPackageWeight(productDetails.getPackageWeight());
-                    existingProduct.setPricePerKg(productDetails.getPricePerKg());
+                    existingProduct.setEntryDate(productDetails.getEntryDate());
+                    existingProduct.setExpiryDate(productDetails.getExpiryDate());
                     return productoService.updateProduct(id, existingProduct);
                 })
                 .map(ResponseEntity::ok)
