@@ -52,7 +52,6 @@ public class ProductoRest {
                     existingProduct.setTypeProduct(productDetails.getTypeProduct());
                     existingProduct.setPackageWeight(productDetails.getPackageWeight());
                     existingProduct.setEntryDate(productDetails.getEntryDate());
-                    existingProduct.setExpiryDate(productDetails.getExpiryDate());
                     return productoService.updateProduct(id, existingProduct);
                 })
                 .map(ResponseEntity::ok)

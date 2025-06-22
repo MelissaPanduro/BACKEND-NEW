@@ -42,7 +42,7 @@ public class SaleService {
                                 .flatMap(product -> {
                                     BigDecimal weight = product.getPackageWeight();
                                     BigDecimal totalWeight = weight.multiply(BigDecimal.valueOf(packages));
-                                    BigDecimal totalPrice = totalWeight.multiply(BigDecimal.valueOf(0)); // usar 0 como placeholder
+                                    BigDecimal totalPrice = totalWeight.multiply(BigDecimal.valueOf(0)); // placeholder
 
                                     SaleDetail detail = SaleDetail.builder()
                                             .saleId(savedSale.getId())
@@ -64,6 +64,32 @@ public class SaleService {
                         return saleDto;
                     });
         });
+    }
+
+    public Mono<SaleDto> updateSale(Long id, SaleDto saleDto) {
+        return saleRepository.findById(id)
+                .flatMap(existingSale -> {
+                    existingSale.setSaleDate(saleDto.getSaleDate());
+                    existingSale.setName(saleDto.getName());
+                    existingSale.setRuc(saleDto.getRuc());
+                    existingSale.setAddress(saleDto.getAddress());
+                    return saleRepository.save(existingSale);
+                })
+                .flatMap(savedSale -> saleDetailRepository.deleteBySaleId(savedSale.getId())
+                        .thenMany(Flux.fromIterable(saleDto.getDetails())
+                                .flatMap(detailDto -> {
+                                    SaleDetail detail = SaleDetail.builder()
+                                            .saleId(savedSale.getId())
+                                            .productId(detailDto.getProductId())
+                                            .weight(detailDto.getWeight())
+                                            .packages(detailDto.getPackages())
+                                            .totalWeight(detailDto.getTotalWeight())
+                                            .pricePerKg(detailDto.getPricePerKg())
+                                            .totalPrice(detailDto.getTotalPrice())
+                                            .build();
+                                    return saleDetailRepository.save(detail);
+                                }))
+                        .then(Mono.just(saleDto)));
     }
 
     public Mono<Void> delete(Long id) {
@@ -99,6 +125,6 @@ public class SaleService {
 
     public Flux<SaleDto> findAll() {
         return saleRepository.findAll()
-                .flatMap(sale -> getById(sale.getId())); // ahora es correcto
+                .flatMap(sale -> getById(sale.getId()));
     }
 }
