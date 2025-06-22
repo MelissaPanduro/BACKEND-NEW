@@ -12,6 +12,5 @@ public class SaleDto {
     private String name;
     private String ruc;
     private String address;
-    private String status;
     private List<SaleDetailDto> details;
 }

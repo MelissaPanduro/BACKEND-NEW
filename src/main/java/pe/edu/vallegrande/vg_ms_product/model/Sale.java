@@ -26,4 +26,5 @@ public class Sale {
     private String ruc;
 
     private String address;
+    
 }

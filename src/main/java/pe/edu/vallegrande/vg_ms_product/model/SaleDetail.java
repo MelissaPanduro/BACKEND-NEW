@@ -37,5 +37,5 @@ public class SaleDetail {
     private BigDecimal pricePerKg;
 
     @Column("total_price")
-    private BigDecimal totalPrice;
+    private BigDecimal totalPrice;  
 }
