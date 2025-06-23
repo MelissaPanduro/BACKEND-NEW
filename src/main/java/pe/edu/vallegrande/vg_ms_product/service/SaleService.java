@@ -37,12 +37,13 @@ public class SaleService {
                     .flatMap(detailDto -> {
                         Long productId = detailDto.getProductId();
                         int packages = detailDto.getPackages();
+                        BigDecimal pricePerKg = detailDto.getPricePerKg(); // ✅ se toma del DTO
 
                         return productoService.getProductById(productId)
                                 .flatMap(product -> {
                                     BigDecimal weight = product.getPackageWeight();
                                     BigDecimal totalWeight = weight.multiply(BigDecimal.valueOf(packages));
-                                    BigDecimal totalPrice = totalWeight.multiply(BigDecimal.valueOf(0)); // placeholder
+                                    BigDecimal totalPrice = totalWeight.multiply(pricePerKg);
 
                                     SaleDetail detail = SaleDetail.builder()
                                             .saleId(savedSale.getId())
@@ -50,7 +51,7 @@ public class SaleService {
                                             .weight(weight)
                                             .packages(packages)
                                             .totalWeight(totalWeight)
-                                            .pricePerKg(BigDecimal.ZERO)
+                                            .pricePerKg(pricePerKg)
                                             .totalPrice(totalPrice)
                                             .build();
 
