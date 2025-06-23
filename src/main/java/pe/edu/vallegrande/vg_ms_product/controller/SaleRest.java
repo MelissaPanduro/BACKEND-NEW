@@ -52,4 +52,12 @@ public class SaleRest {
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
+
+    // Buscar una venta por documento
+    @GetMapping("/search-by-document/{document}")
+    public Mono<ResponseEntity<SaleDto>> getSaleByDocument(@PathVariable String document) {
+        return saleService.findByDocument(document)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 }

@@ -128,4 +128,11 @@ public class SaleService {
         return saleRepository.findAll()
                 .flatMap(sale -> getById(sale.getId()));
     }
+
+    public Mono<SaleDto> findByDocument(String document) {
+    // Lógica para buscar por documento (puede ser RUC o similar)
+    return saleRepository.findByDocument(document)
+            .map(sale -> mapper.toDto(sale)); // o como conviertas a DTO
+    }
+
 }
