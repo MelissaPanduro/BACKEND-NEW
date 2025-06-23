@@ -129,10 +129,20 @@ public class SaleService {
                 .flatMap(sale -> getById(sale.getId()));
     }
 
-    public Mono<SaleDto> findByDocument(String document) {
-    // Lógica para buscar por documento (puede ser RUC o similar)
-    return saleRepository.findByDocument(document)
-            .map(sale -> mapper.toDto(sale)); // o como conviertas a DTO
+
+    public Flux<SaleDto> getSalesByRuc(String ruc) {
+    return saleRepository.findByRuc(ruc)
+            .map(sale -> {
+                SaleDto dto = new SaleDto();
+                dto.setId(sale.getId());
+                dto.setSaleDate(sale.getSaleDate());
+                dto.setName(sale.getName());
+                dto.setRuc(sale.getRuc());
+                dto.setAddress(sale.getAddress());
+                dto.setDetails(null); // no se incluyen los detalles
+                return dto;
+            });
     }
+
 
 }

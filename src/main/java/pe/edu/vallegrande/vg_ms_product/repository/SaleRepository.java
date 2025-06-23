@@ -15,6 +15,6 @@ public interface SaleRepository extends ReactiveCrudRepository<Sale, Long> {
 
     Flux<Sale> findBySaleDateBetween(LocalDate startDate, LocalDate endDate);
 
-    // Nuevo método para buscar por RUC (DNI o RUC en tu caso)
-    Mono<Sale> findByRuc(String ruc);
+    Flux<Sale> findByRuc(String ruc);
+
 }

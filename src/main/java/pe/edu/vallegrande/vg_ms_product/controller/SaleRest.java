@@ -54,10 +54,9 @@ public class SaleRest {
     }
 
     // Buscar una venta por documento
-    @GetMapping("/search-by-document/{document}")
-    public Mono<ResponseEntity<SaleDto>> getSaleByDocument(@PathVariable String document) {
-        return saleService.findByDocument(document)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+    @GetMapping("/ruc/{ruc}")
+    public Flux<SaleDto> getByRuc(@PathVariable String ruc) {
+        return saleService.getSalesByRuc(ruc);
     }
+
 }
